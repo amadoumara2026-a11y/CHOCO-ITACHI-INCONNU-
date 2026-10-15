@@ -1,5 +1,4 @@
 import 'dotenv/config';
-
 import fs, { existsSync, mkdirSync, rmSync } from 'fs';
 import path, { dirname } from 'path';
 import chalk from 'chalk';
@@ -23,64 +22,73 @@ import { printLog } from './lib/print.js';
 import { writeErrorLog } from './lib/logger.js';
 import { handleMessages, handleGroupParticipantUpdate, handleStatus, handleCall } from './lib/messageHandler.js';
 import commandHandler from './lib/commandHandler.js';
+
 store.readFromFile();
 setInterval(() => store.writeToFile(), config.storeWriteInterval || 10000);
 setInterval(() => {
     if (global.gc) {
         global.gc();
-        console.log('🧹 Garbage collection completed');
+        console.log('🧹 Choco GC nettoyé');
     }
 }, 60000);
 setInterval(() => {
     const used = process.memoryUsage().rss / 1024 / 1024;
     if (used > 400) {
-        printLog('warning', 'RAM too high (>400MB), restarting bot...');
+        printLog('warning', 'RAM trop haute (>400MB), redémarrage Choco...');
         process.exit(1);
     }
 }, 30000);
-const phoneNumber = config.pairingNumber || config.ownerNumber || "923051391005";
-// Auto-create data directory and default files on startup
+
+// CHOCO ITACHI NUMÉRO PAR DÉFAUT 🇬🇳
+const phoneNumber = config.pairingNumber || config.ownerNumber || "224629447488";
+
 const DATA_DEFAULTS = {
-    'owner.json': [],
+    'owner.json': ["224629447488"],
     'banned.json': [],
-    'premium.json': [],
+    'premium.json': ["224629447488"],
     'warnings.json': {},
     'notes.json': {},
     'autoAi.json': {},
     'messageCount.json': { isPublic: true, messageCount: {} },
-    'userGroupData.json': { users: [], groups: [], antilink: {}, antibadword: {}, warnings: {}, sudo: [], welcome: {}, goodbye: {}, chatbot: {}, autoReaction: false },
-    'autoStatus.json': { enabled: false },
-    'autoread.json': { enabled: false },
-    'autotyping.json': { enabled: false },
+    'userGroupData.json': { users: [], groups: [], antilink: {}, antibadword: {}, warnings: {}, sudo: ["224629447488"], welcome: {}, goodbye: {}, chatbot: {}, autoReaction: true },
+    'autoStatus.json': { enabled: true },
+    'autoread.json': { enabled: true },
+    'autotyping.json': { enabled: true },
     'pmblocker.json': { enabled: false },
-    'anticall.json': { enabled: false },
-    'stealthMode.json': { enabled: false },
-    'autoBio.json': { enabled: false, customBio: null },
-    'autoReaction.json': { enabled: false },
-    'antidelete.json': { enabled: false },
+    'anticall.json': { enabled: true },
+    'stealthMode.json': { enabled: true },
+    'autoBio.json': { enabled: true, customBio: "🍫 CHOCO ITACHI INCONNU 👁️ | By Boss Alin" },
+    'autoReaction.json': { enabled: true },
+    'antidelete.json': { enabled: true },
     'antilink.json': {},
     'antibadword.json': {},
+    'choco.json': { mode: "inconnu", owner: "Boss Alin", theme: "🍫👁️" },
 };
+
 fs.mkdirSync('./data', { recursive: true });
 for (const [file, def] of Object.entries(DATA_DEFAULTS)) {
     const fp = `./data/${file}`;
     if (!fs.existsSync(fp))
         fs.writeFileSync(fp, JSON.stringify(def, null, 2));
 }
+
 let owner = [];
 try {
     owner = JSON.parse(fs.readFileSync('./data/owner.json', 'utf-8'));
 }
 catch {
-    owner = [];
+    owner = ["224629447488"];
 }
-global.botname = config.botName || "MEGA-MD";
-global.themeemoji = "•";
-const pairingCode = !process.argv.includes("--qr-code");
+
+// CHOCO ITACHI BRANDING 🍫👁️
+global.botname = config.botName || "CHOCO-ITACHI-INCONNU";
+global.themeemoji = "🍫";
+
+const pairingCode =!process.argv.includes("--qr-code");
 const useMobile = process.argv.includes("--mobile");
 let rl = null;
 let rlClosed = false;
-if (process.stdin.isTTY && !config.pairingNumber) {
+if (process.stdin.isTTY &&!config.pairingNumber) {
     rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -88,7 +96,7 @@ if (process.stdin.isTTY && !config.pairingNumber) {
     rl.on('close', () => { rlClosed = true; });
 }
 const question = (text) => {
-    if (rl && !rlClosed) {
+    if (rl &&!rlClosed) {
         return new Promise((resolve) => rl.question(text, resolve));
     }
     else {
@@ -96,11 +104,11 @@ const question = (text) => {
     }
 };
 process.on('exit', () => {
-    if (rl && !rlClosed)
+    if (rl &&!rlClosed)
         rl.close();
 });
 process.on('SIGINT', () => {
-    if (rl && !rlClosed)
+    if (rl &&!rlClosed)
         rl.close();
     process.exit(0);
 });
@@ -118,33 +126,33 @@ function hasValidSession() {
             return false;
         const fileContent = fs.readFileSync(credsPath, 'utf8');
         if (!fileContent || fileContent.trim().length === 0) {
-            printLog('warning', 'creds.json exists but is empty');
+            printLog('warning', 'creds.json vide');
             return false;
         }
         try {
             const creds = JSON.parse(fileContent);
-            if (!creds.noiseKey || !creds.signedIdentityKey || !creds.signedPreKey) {
-                printLog('warning', 'creds.json is missing required fields');
+            if (!creds.noiseKey ||!creds.signedIdentityKey ||!creds.signedPreKey) {
+                printLog('warning', 'creds.json incomplet');
                 return false;
             }
             if (creds.registered === false) {
-                printLog('warning', 'Session not registered. Clearing for fresh pairing...');
+                printLog('warning', 'Session non enregistrée. Nettoyage...');
                 try {
                     rmSync(path.join(__dirname, 'session'), { recursive: true, force: true });
                 }
                 catch (_e) { /* ignore */ }
                 return false;
             }
-            printLog('success', 'Valid and registered session credentials found');
+            printLog('success', 'Session Choco valide trouvée 🍫');
             return true;
         }
         catch (_parseError) {
-            printLog('warning', 'creds.json contains invalid JSON');
+            printLog('warning', 'creds.json invalide');
             return false;
         }
     }
     catch (error) {
-        printLog('error', `Error checking session validity: ${error.message}`);
+        printLog('error', `Erreur session: ${error.message}`);
         return false;
     }
 }
@@ -153,7 +161,7 @@ async function initializeSession() {
     const txt = config.sessionId;
     if (!txt) {
         if (hasValidSession()) {
-            printLog('success', 'Existing session found. Using saved credentials');
+            printLog('success', 'Session existante Choco utilisée');
             return true;
         }
         return false;
@@ -164,24 +172,24 @@ async function initializeSession() {
         await SaveCreds(txt);
         await delay(2000);
         if (hasValidSession()) {
-            printLog('success', 'Session file verified and valid');
+            printLog('success', 'Session Choco vérifiée');
             await delay(1000);
             return true;
         }
         else {
-            printLog('error', 'Session file not valid after download');
+            printLog('error', 'Session invalide après téléchargement');
             return false;
         }
     }
     catch (error) {
-        printLog('error', `Error downloading session: ${error.message}`);
+        printLog('error', `Erreur téléchargement session: ${error.message}`);
         return false;
     }
 }
 server.listen(PORT, () => {
-    printLog('success', `Server listening on port ${PORT}`);
+    printLog('success', `CHOCO ITACHI Serveur sur port ${PORT} 🍫`);
 });
-async function startQasimDev() {
+async function startChocoItachi() {
     try {
         const { version } = await fetchLatestBaileysVersion();
         ensureSessionDirectory();
@@ -194,7 +202,7 @@ async function startQasimDev() {
         const msgRetryCounterCache = new NodeCache();
         const ghostMode = await store.getSetting('global', 'stealthMode');
         const isGhostActive = ghostMode && ghostMode.enabled;
-        const QasimDev = makeWASocket({
+        const ChocoItachi = makeWASocket({
             version,
             logger: pino({ level: 'silent' }),
             browser: Browsers.macOS('Chrome'),
@@ -202,7 +210,7 @@ async function startQasimDev() {
                 creds: state.creds,
                 keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
             },
-            markOnlineOnConnect: !isGhostActive,
+            markOnlineOnConnect:!isGhostActive,
             generateHighQualityLinkPreview: true,
             syncFullHistory: false,
             getMessage: async (key) => {
@@ -215,34 +223,34 @@ async function startQasimDev() {
             connectTimeoutMs: 60000,
             keepAliveIntervalMs: 10000,
         });
-        QasimDev.store = store;
-        const originalSendPresenceUpdate = QasimDev.sendPresenceUpdate;
-        const originalReadMessages = QasimDev.readMessages;
-        const originalSendReceipt = QasimDev.sendReceipt;
-        QasimDev.sendPresenceUpdate = async function (...args) {
+        ChocoItachi.store = store;
+        const originalSendPresenceUpdate = ChocoItachi.sendPresenceUpdate;
+        const originalReadMessages = ChocoItachi.readMessages;
+        const originalSendReceipt = ChocoItachi.sendReceipt;
+        ChocoItachi.sendPresenceUpdate = async function (...args) {
             const ghostMode = await store.getSetting('global', 'stealthMode');
             if (ghostMode && ghostMode.enabled) {
-                printLog('info', '👻 Blocked presence update (stealth mode)');
+                printLog('info', '👻 Présence bloquée (Mode Inconnu)');
                 return;
             }
             return originalSendPresenceUpdate.apply(this, args);
         };
-        QasimDev.readMessages = async function (...args) {
+        ChocoItachi.readMessages = async function (...args) {
             const ghostMode = await store.getSetting('global', 'stealthMode');
             if (ghostMode && ghostMode.enabled)
                 return;
             return originalReadMessages.apply(this, args);
         };
         if (originalSendReceipt) {
-            QasimDev.sendReceipt = async function (...args) {
+            ChocoItachi.sendReceipt = async function (...args) {
                 const ghostMode = await store.getSetting('global', 'stealthMode');
                 if (ghostMode && ghostMode.enabled)
                     return;
                 return originalSendReceipt.apply(this, args);
             };
         }
-        const originalQuery = QasimDev.query;
-        QasimDev.query = async function (node, ...args) {
+        const originalQuery = ChocoItachi.query;
+        ChocoItachi.query = async function (node,...args) {
             const ghostMode = await store.getSetting('global', 'stealthMode');
             if (ghostMode && ghostMode.enabled) {
                 if (node && node.tag === 'receipt')
@@ -250,62 +258,53 @@ async function startQasimDev() {
                 if (node && node.attrs && (node.attrs.type === 'read' || node.attrs.type === 'read-self'))
                     return;
             }
-            return originalQuery.apply(this, [node, ...args]);
+            return originalQuery.apply(this, [node,...args]);
         };
-        QasimDev.isGhostMode = async () => {
+        ChocoItachi.isGhostMode = async () => {
             const ghostMode = await store.getSetting('global', 'stealthMode');
             return ghostMode && ghostMode.enabled;
         };
-        QasimDev.ev.on('creds.update', _saveCreds);
-        store.bind(QasimDev.ev);
-        QasimDev.ev.on('messages.upsert', async (chatUpdate) => {
+        ChocoItachi.ev.on('creds.update', _saveCreds);
+        store.bind(ChocoItachi.ev);
+        ChocoItachi.ev.on('messages.upsert', async (chatUpdate) => {
             try {
                 const mek = chatUpdate.messages[0];
                 if (!mek.message)
                     return;
                 mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage')
-                    ? mek.message.ephemeralMessage.message
+                   ? mek.message.ephemeralMessage.message
                     : mek.message;
                 if (mek.key && mek.key.remoteJid === 'status@broadcast') {
-                    await handleStatus(QasimDev, chatUpdate);
+                    await handleStatus(ChocoItachi, chatUpdate);
                     return;
                 }
-                if (!QasimDev.public && !mek.key.fromMe && chatUpdate.type === 'notify') {
+                if (!ChocoItachi.public &&!mek.key.fromMe && chatUpdate.type === 'notify') {
                     const isGroup = mek.key?.remoteJid?.endsWith('@g.us');
                     if (!isGroup)
                         return;
                 }
                 if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16)
                     return;
-                if (QasimDev?.msgRetryCounterCache) {
-                    QasimDev.msgRetryCounterCache.clear();
+                if (ChocoItachi?.msgRetryCounterCache) {
+                    ChocoItachi.msgRetryCounterCache.clear();
                 }
                 try {
-                    await handleMessages(QasimDev, chatUpdate);
+                    await handleMessages(ChocoItachi, chatUpdate);
                 }
                 catch (err) {
-                    printLog('error', `Error in handleMessages: ${err.message}`);
+                    printLog('error', `Erreur handleMessages: ${err.message}`);
                     if (mek.key && mek.key.remoteJid) {
-                        await QasimDev.sendMessage(mek.key.remoteJid, {
-                            text: '❌ An error occurred while processing your message.',
-                            contextInfo: {
-                                forwardingScore: 1,
-                                isForwarded: true,
-                                forwardedNewsletterMessageInfo: {
-                                    newsletterJid: '120363319098372999@newsletter',
-                                    newsletterName: 'GlobalTechInc',
-                                    serverMessageId: -1
-                                }
-                            }
+                        await ChocoItachi.sendMessage(mek.key.remoteJid, {
+                            text: '❌ Erreur Choco Itachi, réessaie Boss!',
                         }).catch(console.error);
                     }
                 }
             }
             catch (err) {
-                printLog('error', `Error in messages.upsert: ${err.message}`);
+                printLog('error', `Erreur messages.upsert: ${err.message}`);
             }
         });
-        QasimDev.decodeJid = (jid) => {
+        ChocoItachi.decodeJid = (jid) => {
             if (!jid)
                 return jid;
             if (/:\d+@/gi.test(jid)) {
@@ -315,37 +314,37 @@ async function startQasimDev() {
             else
                 return jid;
         };
-        QasimDev.ev.on('contacts.update', (update) => {
+        ChocoItachi.ev.on('contacts.update', (update) => {
             for (const contact of update) {
-                const id = QasimDev.decodeJid(contact.id);
+                const id = ChocoItachi.decodeJid(contact.id);
                 if (store && store.contacts)
                     store.contacts[id] = { id, name: contact.notify };
             }
         });
-        QasimDev.getName = (jid, withoutContact = false) => {
-            const id = QasimDev.decodeJid(jid);
-            withoutContact = QasimDev.withoutContact || withoutContact;
+        ChocoItachi.getName = (jid, withoutContact = false) => {
+            const id = ChocoItachi.decodeJid(jid);
+            withoutContact = ChocoItachi.withoutContact || withoutContact;
             let v;
             if (id.endsWith("@g.us"))
                 return new Promise(async (resolve) => {
                     v = store.contacts[id] || {};
                     if (!(v.name || v.subject))
-                        v = QasimDev.groupMetadata(id) || {};
+                        v = ChocoItachi.groupMetadata(id) || {};
                     resolve(v.name || v.subject || PhoneNumber(`+${ id.replace('@s.whatsapp.net', '')}`).number?.international);
                 });
             else
-                v = id === '0@s.whatsapp.net' ? {
+                v = id === '0@s.whatsapp.net'? {
                     id,
                     name: 'WhatsApp'
-                } : id === QasimDev.decodeJid(QasimDev.user.id) ?
-                    QasimDev.user :
+                } : id === ChocoItachi.decodeJid(ChocoItachi.user.id)?
+                    ChocoItachi.user :
                     (store.contacts[id] || {});
-            return (withoutContact ? '' : v.name) || v.subject || v.verifiedName || PhoneNumber(`+${ jid.replace('@s.whatsapp.net', '')}`).number?.international;
+            return (withoutContact? '' : v.name) || v.subject || v.verifiedName || PhoneNumber(`+${ jid.replace('@s.whatsapp.net', '')}`).number?.international;
         };
-        QasimDev.public = true;
-        QasimDev.serializeM = (m) => smsg(QasimDev, m, store);
+        ChocoItachi.public = true;
+        ChocoItachi.serializeM = (m) => smsg(ChocoItachi, m, store);
         const isRegistered = state.creds?.registered === true;
-        if (pairingCode && !isRegistered) {
+        if (pairingCode &&!isRegistered) {
             if (useMobile)
                 throw new Error('Cannot use pairing code with mobile api');
             let phoneNumberInput;
@@ -355,28 +354,28 @@ async function startQasimDev() {
             else if (process.env.PAIRING_NUMBER) {
                 phoneNumberInput = process.env.PAIRING_NUMBER;
             }
-            else if (rl && !rlClosed) {
-                phoneNumberInput = await question(chalk.bgBlack(chalk.greenBright(`Please type your WhatsApp number 😍\nFormat: 923001234567 (without + or spaces) : `)));
+            else if (rl &&!rlClosed) {
+                phoneNumberInput = await question(chalk.bgBlack(chalk.greenBright(`Mets ton numéro Choco 👁️\nFormat: 224629447488 : `)));
             }
             else {
                 phoneNumberInput = phoneNumber;
-                printLog('info', `Using default phone number: ${phoneNumberInput}`);
+                printLog('info', `Numéro Choco par défaut: ${phoneNumberInput}`);
             }
             phoneNumberInput = phoneNumberInput.replace(/[^0-9]/g, '');
             const pn = PhoneNumber(`+${ phoneNumberInput}`);
             if (!pn.valid) {
-                printLog('error', 'Invalid phone number format');
-                if (rl && !rlClosed)
+                printLog('error', 'Numéro invalide Boss');
+                if (rl &&!rlClosed)
                     rl.close();
                 process.exit(1);
             }
             const doPairing = async (num, attempt = 1) => {
                 try {
-                    let code = await QasimDev.requestPairingCode(num);
+                    let code = await ChocoItachi.requestPairingCode(num);
                     code = code?.match(/.{1,4}/g)?.join("-") || code;
-                    console.log(chalk.black(chalk.bgGreen(`Your Pairing Code : `)), chalk.black(chalk.white(code)));
-                    printLog('success', `Pairing code generated: ${code}`);
-                    if (rl && !rlClosed) {
+                    console.log(chalk.black(chalk.bgGreen(`CODE PAIRING CHOCO ITACHI 👁️ : `)), chalk.black(chalk.white(code)));
+                    printLog('success', `Code Choco généré: ${code}`);
+                    if (rl &&!rlClosed) {
                         rl.close();
                         rl = null;
                     }
@@ -388,29 +387,29 @@ async function startQasimDev() {
                         }
                         catch (_e) { /* ignore */ }
                         await delay(3000);
-                        startQasimDev();
+                        startChocoItachi();
                     }
                     else {
-                        printLog('error', 'All 3 pairing attempts failed. Please restart manually.');
+                        printLog('error', '3 tentatives échouées. Relance Boss!');
                     }
                 }
             };
             setTimeout(() => doPairing(phoneNumberInput), 3000);
         }
         else if (isRegistered) {
-            if (rl && !rlClosed) {
+            if (rl &&!rlClosed) {
                 rl.close();
                 rl = null;
             }
         }
         else {
-            printLog('warning', 'Waiting for connection to establish...');
-            if (rl && !rlClosed) {
+            printLog('warning', 'Attente connexion Choco...');
+            if (rl &&!rlClosed) {
                 rl.close();
                 rl = null;
             }
         }
-        QasimDev.ev.on('connection.update', async (s) => {
+        ChocoItachi.ev.on('connection.update', async (s) => {
             const { connection, lastDisconnect, qr } = s;
             if (qr) {
                 if (!pairingCode) {
@@ -423,111 +422,101 @@ async function startQasimDev() {
                 }
             }
             if (connection === "open") {
-                printLog('success', 'Bot connected successfully!');
+                printLog('success', 'CHOCO ITACHI CONNECTÉ! 🍫👁️');
                 try {
                     const setbioModule = await import('./plugins/setbio.js');
                     const startAutoBio = setbioModule.startAutoBio || setbioModule.default?.startAutoBio;
                     if (typeof startAutoBio === 'function')
-                        startAutoBio(QasimDev);
+                        startAutoBio(ChocoItachi);
                 }
                 catch (e) {
-                    printLog('error', `Failed to start auto bio: ${e.message}`);
+                    printLog('error', `Bio auto échoué: ${e.message}`);
                 }
                 const ghostMode = await store.getSetting('global', 'stealthMode');
                 if (ghostMode && ghostMode.enabled) {
-                    printLog('info', '👻 STEALTH MODE ACTIVE');
+                    printLog('info', '👻 MODE INCONNU ACTIF - Boss Alin invisible!');
                 }
-                printLog('success', `Connected to => ${ JSON.stringify(QasimDev.user, null, 2)}`);
+                printLog('success', `Connecté => ${ JSON.stringify(ChocoItachi.user, null, 2)}`);
                 try {
-                    const botNumber = `${QasimDev.user.id.split(':')[0] }@s.whatsapp.net`;
-                    const ghostStatus = (ghostMode && ghostMode.enabled) ? '\n👻 Stealth Mode: ACTIVE' : '';
-                    await QasimDev.sendMessage(botNumber, {
-                        text: `🤖 Bot Connected Successfully!\n\n⏰ Time: ${new Date().toLocaleString()}\n✅ Status: Online and Ready!${ghostStatus}\n\n✅Make sure to join below channel`,
-                        contextInfo: {
-                            forwardingScore: 1,
-                            isForwarded: true,
-                            forwardedNewsletterMessageInfo: {
-                                newsletterJid: '120363319098372999@newsletter',
-                                newsletterName: 'GlobalTechInc',
-                                serverMessageId: -1
-                            }
-                        }
+                    const botNumber = `${ChocoItachi.user.id.split(':')[0] }@s.whatsapp.net`;
+                    const ghostStatus = (ghostMode && ghostMode.enabled)? '\n👻 Mode Inconnu: ACTIF' : '';
+                    await ChocoItachi.sendMessage(botNumber, {
+                        text: `🍫 CHOCO ITACHI INCONNU CONNECTÉ! 👁️\n\n👑 Boss: Alin\n📱 Num: 224629447488\n⏰ Heure: ${new Date().toLocaleString()}\n✅ Statut: En ligne!${ghostStatus}\n\n🔥 Merci d'utiliser CHOCO ITACHI MD`,
                     });
                 }
                 catch (error) {
-                    printLog('error', `Failed to send connection message: ${error.message}`);
+                    printLog('error', `Échec message connexion: ${error.message}`);
                 }
                 await delay(1999);
                 try {
                     owner = JSON.parse(fs.readFileSync('./data/owner.json', 'utf-8'));
                 }
                 catch (_e) { }
-                printLog('info', `[ ${config.botName || 'MEGA-MD'} ]`);
-                printLog('info', `WA NUMBER  : ${owner[0] || config.ownerNumber || ''}`);
-                printLog('success', `Bot Connected Successfully!`);
-                printLog('info', `Plugins   : ${commandHandler.commands.size}`);
-                printLog('info', `Prefixes   : ${config.prefixes.join(', ')}`);
-                printLog('store', `Backend    : ${store.getStats().backend}`);
-                console.log();
+                printLog('info', `[ ${config.botName || 'CHOCO-ITACHI-INCONNU'} ]`);
+                printLog('info', `WA NUMBER : ${owner[0] || config.ownerNumber || '224629447488'}`);
+                printLog('success', `CHOCO ITACHI CONNECTÉ!`);
+                printLog('info', `Plugins : ${commandHandler.commands.size}`);
+                printLog('info', `Prefixes : ${config.prefixes.join(', ')}`);
+                printLog('store', `Backend : ${store.getStats().backend}`);
+                console.log(chalk.hex('#8B4513').bold(`\n🍫 CHOCO ITACHI INCONNU EST PRÊT! By Boss Alin 👁️\n`));
             }
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut && statusCode !== 401;
+                const shouldReconnect = statusCode!== DisconnectReason.loggedOut && statusCode!== 401;
                 if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
                     try {
                         rmSync('./session', { recursive: true, force: true });
                     }
                     catch (_e) { /* ignore */ }
                     await delay(3000);
-                    startQasimDev();
+                    startChocoItachi();
                     return;
                 }
                 if (shouldReconnect) {
-                    printLog('connection', 'Reconnecting in 5 seconds...');
+                    printLog('connection', 'Reconnexion Choco dans 5s...');
                     await delay(5000);
-                    startQasimDev();
+                    startChocoItachi();
                 }
             }
         });
-        QasimDev.ev.on('call', async (calls) => {
-            await handleCall(QasimDev, calls);
+        ChocoItachi.ev.on('call', async (calls) => {
+            await handleCall(ChocoItachi, calls);
         });
-        QasimDev.ev.on('group-participants.update', async (update) => {
-            await handleGroupParticipantUpdate(QasimDev, update);
+        ChocoItachi.ev.on('group-participants.update', async (update) => {
+            await handleGroupParticipantUpdate(ChocoItachi, update);
         });
-        QasimDev.ev.on('status.update', async (status) => {
-            await handleStatus(QasimDev, status);
+        ChocoItachi.ev.on('status.update', async (status) => {
+            await handleStatus(ChocoItachi, status);
         });
-        QasimDev.ev.on('messages.reaction', async (reaction) => {
-            await handleStatus(QasimDev, reaction);
+        ChocoItachi.ev.on('messages.reaction', async (reaction) => {
+            await handleStatus(ChocoItachi, reaction);
         });
-        return QasimDev;
+        return ChocoItachi;
     }
     catch (error) {
-        printLog('error', `Error in startQasimDev: ${error.message}`);
-        if (rl && !rlClosed) {
+        printLog('error', `Erreur Choco: ${error.message}`);
+        if (rl &&!rlClosed) {
             rl.close();
             rl = null;
         }
         await delay(5000);
-        startQasimDev();
+        startChocoItachi();
     }
 }
 async function main() {
     await compileAll();
     await commandHandler.loadCommands();
-    printLog('info', 'Starting MEGA MD BOT...');
+    printLog('info', 'Démarrage CHOCO ITACHI INCONNU... 🍫👁️');
     await initializeSession();
     await delay(3000);
-    startQasimDev().catch((error) => {
-        printLog('error', `Fatal error: ${error.message}`);
-        if (rl && !rlClosed)
+    startChocoItachi().catch((error) => {
+        printLog('error', `Erreur fatale: ${error.message}`);
+        if (rl &&!rlClosed)
             rl.close();
         process.exit(1);
     });
 }
 main();
-// Session cleanup interval
 const sessionDir = path.join(process.cwd(), 'session');
 setInterval(() => {
     if (!fs.existsSync(sessionDir))
@@ -544,14 +533,12 @@ setInterval(() => {
         }
     });
 }, 3 * 60 * 1000);
-// Temp folder setup
 const customTemp = path.join(process.cwd(), 'temp');
 if (!fs.existsSync(customTemp))
     fs.mkdirSync(customTemp, { recursive: true });
 process.env.TMPDIR = customTemp;
 process.env.TEMP = customTemp;
 process.env.TMP = customTemp;
-// Temp folder cleanup
 setInterval(() => {
     fs.readdir(customTemp, (err, files) => {
         if (err)
@@ -566,7 +553,6 @@ setInterval(() => {
         }
     });
 }, 1 * 60 * 60 * 1000);
-// Syntax check dist files
 const folders = [
     path.join(__dirname, './lib'),
     path.join(__dirname, './plugins')
@@ -575,8 +561,8 @@ folders.forEach(folder => {
     if (!fs.existsSync(folder))
         return;
     fs.readdirSync(folder)
-        .filter(file => file.endsWith('.js'))
-        .forEach(file => {
+       .filter(file => file.endsWith('.js'))
+       .forEach(file => {
         const filePath = path.join(folder, file);
         try {
             const code = fs.readFileSync(filePath, 'utf-8');
@@ -585,17 +571,16 @@ folders.forEach(folder => {
                 allowAwaitOutsideFunction: true
             });
             if (err) {
-                console.error(chalk.red(`❌ Syntax error in ${filePath}:\n${err}`));
+                console.error(chalk.red(`❌ Erreur syntaxe ${filePath}:\n${err}`));
             }
         }
         catch (e) {
-            console.error(chalk.yellow(`⚠️ Cannot read file ${filePath}:\n${e}`));
+            console.error(chalk.yellow(`⚠️ Lecture impossible ${filePath}:\n${e}`));
         }
     });
 });
-// Error handlers
 process.on('uncaughtException', (err) => {
-    printLog('error', `Uncaught Exception: ${err.message}`);
+    printLog('error', `Exception: ${err.message}`);
     console.error(err.stack);
     writeErrorLog({
         type: 'uncaughtException',
@@ -605,7 +590,7 @@ process.on('uncaughtException', (err) => {
     });
 });
 process.on('unhandledRejection', (err) => {
-    printLog('error', `Unhandled Rejection: ${err.message}`);
+    printLog('error', `Rejection: ${err.message}`);
     console.error(err.stack);
     writeErrorLog({
         type: 'unhandledRejection',
@@ -616,16 +601,16 @@ process.on('unhandledRejection', (err) => {
 });
 server.on('error', (error) => {
     if (error.code === 'EADDRINUSE') {
-        printLog('error', `Address localhost:${PORT} in use`);
+        printLog('error', `Port localhost:${PORT} occupé`);
         writeErrorLog({
             type: 'serverError',
-            error: `Address localhost:${PORT} in use`,
+            error: `Port localhost:${PORT} occupé`,
             timestamp: new Date().toISOString()
         });
         server.close();
     }
     else {
-        printLog('error', `Server error: ${error.message}`);
+        printLog('error', `Erreur serveur: ${error.message}`);
         writeErrorLog({
             type: 'serverError',
             error: error.message,
