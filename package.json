@@ -1,58 +1,31 @@
 {
   "name": "choco-itachi-md",
   "version": "7.0.0",
-  "description": "CHOCO ITACHI INCONNU - Le Uchiha Choco - Mode Fantôme par Boss Alin",
+  "description": "CHOCO ITACHI INCONNU - Le Uchiha Choco - Mode Fantome par Boss Alin",
   "type": "module",
   "main": "index.js",
-  "directories": {
-    "assets": "assets",
-    "lib": "lib",
-    "data": "data",
-    "plugins": "plugins"
-  },
   "scripts": {
     "start": "node index.js",
     "pair": "node pair.js",
-    "start:optimized": "node --max-old-space-size=512 --optimize-for-size --gc-interval=100 index.js",
-    "start:fresh": "node reset-data.js && node index.js",
-    "dev": "nodemon --watch . --ext js --ignore node_modules --ignore data --ignore session --ignore temp index.js",
-    "reset-data": "node reset-data.js",
-    "reset-session": "node -e \"import('fs').then(f=>f.default.rmSync('./session',{recursive:true,force:true})).then(()=>console.log('Session cleared!'))\"",
-    "build": "echo 'No build step needed - Choco Itachi Ready'",
-    "lint": "eslint . --ext .js",
-    "test": "vitest run"
+    "build": "echo Choco Ready"
   },
-  "keywords": [
-    "choco-itachi",
-    "itachi-inconnu",
-    "whatsapp-bot",
-    "baileys-bot",
-    "choco-md",
-    "uchiha-bot",
-    "boss-alin",
-    "inconnu-md"
-  ],
-  "homepage": "https://github.com/AlinBoss/CHOCO-ITACHI-MD",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/AlinBoss/CHOCO-ITACHI-MD.git"
-  },
-  "bugs": {
-    "url": "https://github.com/AlinBoss/CHOCO-ITACHI-MD/issues"
-  },
+  "keywords": ["choco-itachi", "boss-alin", "inconnu"],
   "license": "MIT",
-  "author": "Boss Alin - Choco Itachi Inconnu",
+  "author": "Boss Alin - 224629447488",
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@whiskeysockets/baileys": "^6.7.24",
-    "acrcloud": "^1.4.0",
-    "api-qasim": "^3.2.10",
     "awesome-phonenumber": "^5.9.0",
     "axios": "^1.8.4",
-    "better-sqlite3": "^12.5.0",
     "chalk": "^5.6.2",
     "cheerio": "^1.2.0",
     "dotenv": "^16.4.5",
     "express": "^4.22.1",
     "file-type": "^21.3.4",
-   
+    "moment-timezone": "^0.5.45",
+    "node-cache": "^5.1.2",
+    "pino": "^9.0.0",
+    "qrcode": "^1.5.3",
+    "syntax-error": "^1.4.0"
+  }
+}
