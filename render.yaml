@@ -1,25 +1,38 @@
 services:
-  - type: web
-    name: mega-md
+    - type: web
+    name: choco-itachi-md
     runtime: docker
     dockerfilePath: lib/Dockerfile
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /
     envVars:
-      - key: SESSION_ID
+            - key: SESSION_ID
         value: ""
-      - key: OWNER_NUMBER
-        value: "923000000000"
-      - key: BOT_NAME
-        value: "MEGA-MD"
-      - key: COMMAND_MODE
+            - key: OWNER_NUMBER
+        value: "224629447488"
+            - key: BOT_NAME
+        value: "CHOCO-ITACHI-INCONNU"
+            - key: PACKNAME
+        value: "CHOCO-ITACHI"
+            - key: COMMAND_MODE
         value: "public"
-      - key: TIMEZONE
-        value: "Asia/Karachi"
-      - key: MONGO_URL
+            - key: TIMEZONE
+        value: "Africa/Conakry"
+            - key: BOT_OWNER
+        value: "Boss Alin - Choco Itachi"
+            - key: PREFIXES
+        value: "."
+            - key: MONGO_URL
         value: ""
-      - key: POSTGRES_URL
+            - key: POSTGRES_URL
         value: ""
-      - key: MYSQL_URL
+            - key: MYSQL_URL
         value: ""
-      - key: DB_URL
+            - key: DB_URL
         value: ""
+            - key: PORT
+        value: "5000"
+            - key: NODE_ENV
+        value: "production"
     startCommand: npm run start:optimized
