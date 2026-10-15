@@ -1,13 +1,8 @@
-FROM quay.io/qasimtech/mega-md:latest
-
-WORKDIR /root/mega-md
-
-COPY package.json package-lock.json ./
-
-RUN npm install
-
+FROM node:20-alpine
+WORKDIR /app
+RUN apk add --no-cache git python3 make g++ cairo-dev jpeg-dev pango-dev musl-dev vips-dev
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 COPY . .
-
-EXPOSE 5000
-
-CMD ["npm", "run", "start:optimized"]
+EXPOSE 10000
+CMD ["node", "index.js"]
