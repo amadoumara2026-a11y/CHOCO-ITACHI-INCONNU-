@@ -1,11 +1,12 @@
 export default {
     command: 'sc',
-    aliases: [],
+    aliases: ['sourcecode', 'script'],
     category: 'general',
-    description: 'Source / script',
+    description: 'Code source du bot',
     usage: '.sc',
-    async handler(sock, message, _args) {
-        const chatId = message.key.remoteJid;
-        await sock.sendMessage(chatId, { text: '🔎 Source: utilisez .source ou .repo pour voir le dépôt.' });
+    async handler(sock, message, _args, context) {
+        const chatId = context?.chatId || message.key.remoteJid;
+        const url = 'https://github.com/amadoumara2026-a11y/CHOCO-ITACHI-INCONNU';
+        await sock.sendMessage(chatId, { text: `🔎 *Source Code*\n${url}` }, { quoted: message });
     }
 };

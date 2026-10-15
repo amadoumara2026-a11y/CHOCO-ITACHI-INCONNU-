@@ -1,15 +1,13 @@
+import translateCommand from './translate.js';
+
 export default {
+    ...translateCommand,
     command: 'trt',
-    aliases: ['tr'],
-    category: 'general',
-    description: 'Raccourci pour la traduction',
-    usage: '.trt <texte>',
-    async handler(sock, message, args) {
-        const chatId = message.key.remoteJid;
-        if (!args || args.length === 0) {
-            await sock.sendMessage(chatId, { text: 'Usage: .trt <texte>' });
-            return;
-        }
-        await sock.sendMessage(chatId, { text: '🌐 Traduction: commande en cours d\'implémentation. Utilisez .translate.' });
+    aliases: ['translate', 'tr'],
+    category: 'tools',
+    description: 'Traduction rapide du texte',
+    usage: '.trt <texte> <langue> ou réponse à un message avec .trt <langue>',
+    async handler(sock, message, args, context) {
+        return translateCommand.handler(sock, message, args, context);
     }
 };

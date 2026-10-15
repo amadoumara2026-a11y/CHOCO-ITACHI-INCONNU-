@@ -1,11 +1,12 @@
 export default {
     command: 'repo',
-    aliases: ['githubrepo'],
+    aliases: ['github', 'githubrepo', 'source'],
     category: 'general',
     description: 'Lien du dépôt GitHub',
     usage: '.repo',
-    async handler(sock, message, _args) {
-        const chatId = message.key.remoteJid;
-        await sock.sendMessage(chatId, { text: '📦 Dépôt: https://github.com/amadoumara2026-a11y/CHOCO-ITACHI-INCONNU' });
+    async handler(sock, message, _args, context) {
+        const chatId = context?.chatId || message.key.remoteJid;
+        const url = 'https://github.com/amadoumara2026-a11y/CHOCO-ITACHI-INCONNU';
+        await sock.sendMessage(chatId, { text: `📦 *Dépôt GitHub*\n${url}` }, { quoted: message });
     }
 };

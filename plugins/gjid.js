@@ -1,11 +1,11 @@
 export default {
     command: 'gjid',
-    aliases: [],
+    aliases: ['groupjid', 'jid'],
     category: 'general',
-    description: 'Récupère l\'ID du groupe (gjid)',
+    description: 'Affiche l\'ID du groupe / du chat',
     usage: '.gjid',
-    async handler(sock, message, _args) {
-        const chatId = message.key.remoteJid;
-        await sock.sendMessage(chatId, { text: `🔢 Group JID: ${chatId}` });
+    async handler(sock, message, _args, context) {
+        const chatId = context?.chatId || message.key.remoteJid;
+        await sock.sendMessage(chatId, { text: `🆔 *JID*: ${chatId}` }, { quoted: message });
     }
 };

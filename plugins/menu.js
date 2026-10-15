@@ -1,11 +1,13 @@
+import listCommand from './list.js';
+
 export default {
+    ...listCommand,
     command: 'menu',
-    aliases: ['helpmenu'],
+    aliases: ['helpmenu', 'commands', 'h', 'list'],
     category: 'general',
     description: 'Affiche le menu des commandes',
-    usage: '.menu',
-    async handler(sock, message, _args) {
-        const chatId = message.key.remoteJid;
-        await sock.sendMessage(chatId, { text: '📜 Menu: commande en cours d\'implémentation. Utilisez .list ou .smartmenu en attendant.' });
+    usage: '.menu [commande]',
+    async handler(sock, message, args, context) {
+        return listCommand.handler(sock, message, args, context);
     }
 };

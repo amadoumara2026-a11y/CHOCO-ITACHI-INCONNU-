@@ -1,11 +1,13 @@
+import listCommand from './list.js';
+
 export default {
+    ...listCommand,
     command: 'help',
-    aliases: ['aide'],
+    aliases: ['aide', 'menu'],
     category: 'general',
-    description: 'Aide pour les commandes',
-    usage: '.help',
-    async handler(sock, message, _args) {
-        const chatId = message.key.remoteJid;
-        await sock.sendMessage(chatId, { text: '❓ Help: commande en cours d\'implémentation. Essayez .menu.' });
+    description: 'Aide du bot et liste des commandes',
+    usage: '.help [commande]',
+    async handler(sock, message, args, context) {
+        return listCommand.handler(sock, message, args, context);
     }
 };
