@@ -1,10 +1,16 @@
-FROM quay.io/qasimtech/mega-md:latest
+FROM node:20-alpine
 
-WORKDIR /root/mega-md
+WORKDIR /app
 
-RUN git clone https://github.com/GlobalTechInfo/MEGA-MD . && \
-    npm install
+RUN apk add --no-cache git python3 make g++ cairo-dev jpeg-dev pango-dev
 
-EXPOSE 5000
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 
-CMD ["npm", "start"]
+COPY . .
+
+RUN npm rebuild || true
+
+EXPOSE 10000
+
+CMD ["node", "index.js"]
