@@ -15,6 +15,8 @@
         pkgs.yarn
         pkgs.pm2
         pkgs.libuuid
+        pkgs.python3
+        pkgs.cacert
     ];
     env = {
         LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
@@ -22,5 +24,9 @@
             pkgs.vips
             pkgs.sqlite
         ];
+        # CHOCO ITACHI INCONNU ENV
+        NODE_ENV = "production";
+        BOT_NAME = "CHOCO-ITACHI-INCONNU";
+        BOT_OWNER = "Boss Alin";
     };
 }
