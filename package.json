@@ -23,6 +23,7 @@
     "express": "^4.22.1",
     "file-type": "^21.3.4",
     "human-readable": "^0.2.1",
+    "sharp": "^0.33.4",
     "moment-timezone": "^0.5.45",
     "node-cache": "^5.1.2",
     "pino": "^9.0.0",
