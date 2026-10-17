@@ -23,7 +23,6 @@ import { writeErrorLog } from './lib/logger.js';
 import { handleMessages, handleGroupParticipantUpdate, handleStatus, handleCall } from './lib/messageHandler.js';
 import commandHandler from './lib/commandHandler.js';
 
-// 🍫 FIX CHOCO ITACHI - Wrapper pour awesome-phonenumber v7
 function PhoneNumber(numStr) {
   try {
     const pn = parsePhoneNumber(numStr);
@@ -37,19 +36,19 @@ function PhoneNumber(numStr) {
 
 store.readFromFile();
 setInterval(() => store.writeToFile(), config.storeWriteInterval || 10000);
+setInterval(() => { if (global.gc) global.gc(); }, 60000);
+
 setInterval(() => {
-    if (global.gc) {
-        global.gc();
-        console.log('🧹 Choco GC nettoyé');
-    }
+    try {
+        const used = process.memoryUsage().rss / 1024 / 1024;
+        const credsPath = path.join(__dirname, 'session', 'creds.json');
+        const isRegistered = existsSync(credsPath);
+        if (used > 500 && isRegistered) {
+            printLog('warning', `RAM haute (${used.toFixed(0)}MB), redemarrage...`);
+            process.exit(1);
+        }
+    } catch {}
 }, 60000);
-setInterval(() => {
-    const used = process.memoryUsage().rss / 1024 / 1024;
-    if (used > 400) {
-        printLog('warning', 'RAM trop haute (>400MB), redémarrage Choco...');
-        process.exit(1);
-    }
-}, 30000);
 
 const phoneNumber = config.pairingNumber || config.ownerNumber || "224629447488";
 
@@ -79,8 +78,7 @@ const DATA_DEFAULTS = {
 fs.mkdirSync('./data', { recursive: true });
 for (const [file, def] of Object.entries(DATA_DEFAULTS)) {
     const fp = `./data/${file}`;
-    if (!fs.existsSync(fp))
-        fs.writeFileSync(fp, JSON.stringify(def, null, 2));
+    if (!fs.existsSync(fp)) fs.writeFileSync(fp, JSON.stringify(def, null, 2));
 }
 
 let owner = [];
@@ -90,20 +88,20 @@ catch { owner = ["224629447488"]; }
 global.botname = config.botName || "CHOCO-ITACHI-INCONNU";
 global.themeemoji = "🍫";
 
-const pairingCode =!process.argv.includes("--qr-code");
+const pairingCode = !process.argv.includes("--qr-code");
 const useMobile = process.argv.includes("--mobile");
 let rl = null;
 let rlClosed = false;
-if (process.stdin.isTTY &&!config.pairingNumber) {
+if (process.stdin.isTTY && !config.pairingNumber) {
     rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     rl.on('close', () => { rlClosed = true; });
 }
 const question = (text) => {
-    if (rl &&!rlClosed) return new Promise((resolve) => rl.question(text, resolve));
+    if (rl && !rlClosed) return new Promise((resolve) => rl.question(text, resolve));
     else return Promise.resolve(config.ownerNumber || phoneNumber);
 };
-process.on('exit', () => { if (rl &&!rlClosed) rl.close(); });
-process.on('SIGINT', () => { if (rl &&!rlClosed) rl.close(); process.exit(0); });
+process.on('exit', () => { if (rl && !rlClosed) rl.close(); });
+process.on('SIGINT', () => { if (rl && !rlClosed) rl.close(); process.exit(0); });
 
 function ensureSessionDirectory() {
     const sessionPath = path.join(__dirname, 'session');
@@ -118,12 +116,12 @@ function hasValidSession() {
         if (!fileContent || fileContent.trim().length === 0) return false;
         try {
             const creds = JSON.parse(fileContent);
-            if (!creds.noiseKey ||!creds.signedIdentityKey ||!creds.signedPreKey) return false;
+            if (!creds.noiseKey || !creds.signedIdentityKey || !creds.signedPreKey) return false;
             if (creds.registered === false) {
                 try { rmSync(path.join(__dirname, 'session'), { recursive: true, force: true }); } catch {}
                 return false;
             }
-            printLog('success', 'Session Choco valide trouvée 🍫');
+            printLog('success', 'Session Choco valide trouvee 🍫');
             return true;
         } catch { return false; }
     } catch (error) { return false; }
@@ -152,7 +150,7 @@ async function startChocoItachi() {
         const ChocoItachi = makeWASocket({
             version, logger: pino({ level: 'silent' }), browser: Browsers.macOS('Chrome'),
             auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })) },
-            markOnlineOnConnect:!isGhostActive, generateHighQualityLinkPreview: true, syncFullHistory: false,
+            markOnlineOnConnect: !isGhostActive, generateHighQualityLinkPreview: true, syncFullHistory: false,
             getMessage: async (key) => {
                 const jid = jidNormalizedUser(key.remoteJid);
                 const msg = await store.loadMessage(jid, key.id);
@@ -202,15 +200,13 @@ async function startChocoItachi() {
                 if (!mek.message) return;
                 mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage')? mek.message.ephemeralMessage.message : mek.message;
                 if (mek.key && mek.key.remoteJid === 'status@broadcast') { await handleStatus(ChocoItachi, chatUpdate); return; }
-                if (!ChocoItachi.public &&!mek.key.fromMe && chatUpdate.type === 'notify') {
+                if (!ChocoItachi.public && !mek.key.fromMe && chatUpdate.type === 'notify') {
                     const isGroup = mek.key?.remoteJid?.endsWith('@g.us'); if (!isGroup) return;
                 }
                 if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return;
                 if (ChocoItachi?.msgRetryCounterCache) ChocoItachi.msgRetryCounterCache.clear();
                 try { await handleMessages(ChocoItachi, chatUpdate); }
-                catch (err) {
-                    printLog('error', `Erreur handleMessages: ${err.message}`);
-                }
+                catch (err) { printLog('error', `Erreur handleMessages: ${err.message}`); }
             } catch (err) { printLog('error', `Erreur messages.upsert: ${err.message}`); }
         });
         ChocoItachi.decodeJid = (jid) => {
@@ -240,43 +236,54 @@ async function startChocoItachi() {
         };
         ChocoItachi.public = true;
         ChocoItachi.serializeM = (m) => smsg(ChocoItachi, m, store);
+        
         const isRegistered = state.creds?.registered === true;
-        if (pairingCode &&!isRegistered) {
+        if (pairingCode && !isRegistered) {
             if (useMobile) throw new Error('Cannot use pairing code with mobile api');
             let phoneNumberInput;
             if (config.pairingNumber) phoneNumberInput = config.pairingNumber;
             else if (process.env.PAIRING_NUMBER) phoneNumberInput = process.env.PAIRING_NUMBER;
-            else if (rl &&!rlClosed) phoneNumberInput = await question(chalk.bgBlack(chalk.greenBright(`Mets ton numéro Choco 👁️\nFormat: 224629447488 : `)));
-            else { phoneNumberInput = phoneNumber; printLog('info', `Numéro Choco par défaut: ${phoneNumberInput}`); }
+            else if (rl && !rlClosed) phoneNumberInput = await question(chalk.bgBlack(chalk.greenBright(`Mets ton numero Choco 👁️\nFormat: 224629447488 : `)));
+            else { phoneNumberInput = phoneNumber; printLog('info', `Numero Choco par defaut: ${phoneNumberInput}`); }
             phoneNumberInput = phoneNumberInput.replace(/[^0-9]/g, '');
             const pn = PhoneNumber(`+${phoneNumberInput}`);
             if (!pn.valid) {
-                printLog('error', 'Numéro invalide Boss'); if (rl &&!rlClosed) rl.close(); process.exit(1);
+                printLog('error', 'Numero invalide Boss'); if (rl && !rlClosed) rl.close(); process.exit(1);
             }
+            let pairingInProgress = false;
             const doPairing = async (num) => {
+                if (pairingInProgress) return;
+                pairingInProgress = true;
                 try {
+                    await delay(5000);
+                    console.log(chalk.yellow(`⏳ Generation code pour +${num}...`));
                     let code = await ChocoItachi.requestPairingCode(num);
                     code = code?.match(/.{1,4}/g)?.join("-") || code;
-                    console.log(chalk.black(chalk.bgGreen(`CODE PAIRING CHOCO ITACHI 👁️ : `)), chalk.black(chalk.white(code)));
-                    if (rl &&!rlClosed) { rl.close(); rl = null; }
+                    console.log(chalk.black(chalk.bgGreen(`  CODE PAIRING CHOCO ITACHI 👁️  `)), chalk.black(chalk.bgWhite(` ${code} `)));
+                    console.log(chalk.red.bold(`  ⚠️ ENTRE CE CODE EN 30 SECONDES! `));
+                    console.log(chalk.green(`  WhatsApp > Appareils lies > Lier avec numero `));
+                    setTimeout(() => { pairingInProgress = false; }, 120000);
                 } catch (error) {
-                    printLog('error', `Erreur pairing: ${error.message}`);
+                    printLog('error', `Erreur pairing: ${error.message} - Reessaye dans 15s`);
+                    pairingInProgress = false;
+                    await delay(15000);
+                    doPairing(num);
                 }
             };
-            setTimeout(() => doPairing(phoneNumberInput), 3000);
+            setTimeout(() => doPairing(phoneNumberInput), 5000);
         }
         ChocoItachi.ev.on('connection.update', async (s) => {
             const { connection, lastDisconnect, qr } = s;
-            if (qr &&!pairingCode) {
+            if (qr && !pairingCode) {
                 try { console.log(await QRCode.toString(qr, { type: 'terminal', small: true })); } catch { console.log('QR:', qr); }
             }
             if (connection === "open") {
-                printLog('success', 'CHOCO ITACHI CONNECTÉ! 🍫👁️');
-                console.log(chalk.hex('#8B4513').bold(`\n🍫 CHOCO ITACHI INCONNU EST PRÊT! By Boss Alin 👁️\n`));
+                printLog('success', 'CHOCO ITACHI CONNECTE! 🍫👁️');
+                console.log(chalk.hex('#8B4513').bold(`\n🍫 CHOCO ITACHI INCONNU EST PRET! By Boss Alin 👁️\n`));
             }
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode!== DisconnectReason.loggedOut && statusCode!== 401;
+                const shouldReconnect = statusCode !== DisconnectReason.loggedOut && statusCode !== 401;
                 if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
                     try { rmSync('./session', { recursive: true, force: true }); } catch {}
                     await delay(3000); startChocoItachi(); return;
@@ -293,7 +300,7 @@ async function startChocoItachi() {
 }
 async function main() {
     await compileAll(); await commandHandler.loadCommands();
-    printLog('info', 'Démarrage CHOCO ITACHI INCONNU... 🍫👁️');
+    printLog('info', 'Demarrage CHOCO ITACHI INCONNU... 🍫👁️');
     await initializeSession(); await delay(3000);
     startChocoItachi().catch((error) => { printLog('error', `Erreur fatale: ${error.message}`); process.exit(1); });
 }
