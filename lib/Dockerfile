@@ -5,4 +5,4 @@ COPY package*.json ./
 RUN npm install --legacy-peer-deps
 COPY . .
 EXPOSE 10000
-CMD ["node", "index.js"] 
+CMD ["node", "index.js"]
